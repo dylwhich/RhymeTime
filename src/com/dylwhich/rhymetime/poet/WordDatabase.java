@@ -186,8 +186,6 @@ public class WordDatabase {
 		public State nextState;
 	}
 
-	public static final WordDatabase instance = new WordDatabase();
-
 	private final Map<String, Word> wordMap;
 	private final List<Word> wordArray;
 
@@ -288,6 +286,9 @@ public class WordDatabase {
 		int syllableType = 1; // normal stress
 
 		while (state != StateMachine.State.end) {
+			if (pos >= mobyText.length()) {
+				break;
+			}
 			char ch = mobyText.charAt(pos);
 			boolean found = false;
 
