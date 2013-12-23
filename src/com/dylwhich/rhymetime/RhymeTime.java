@@ -1,5 +1,6 @@
 package com.dylwhich.rhymetime;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +42,8 @@ public class RhymeTime extends JavaPlugin implements Listener {
 	public void onEnable() {
 		db = new WordDatabase();
 		try {
-			db.load("dict.txt");
+			db.load(new File(getDataFolder(), "dict.txt").getPath());
+			getLogger().log(Level.INFO, "Finished building WordDatabase");
 		} catch (FileNotFoundException e) {
 			getLogger().log(Level.SEVERE, "Could not find dictionary!", e);
 			getPluginLoader().disablePlugin(this);
