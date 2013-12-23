@@ -1,0 +1,76 @@
+name: RhymeTime
+main: com.dylwhich.rhymetime.RhymeTime
+version: 0.1
+
+permissions:
+  rhymetime.*:
+    description: Gives access to all RhymeTime commands
+    default: op
+    children:
+      rhymetime.control: true
+      rhymetime.participate: true
+      rhymetime.override: true
+      rhymetime.stats: true
+  rhymetime.user:
+    description: Gives normal access to RhymeTime commands
+    default: true
+    children:
+      rhymetime.participate: true
+      rhymetime.stats: true
+  rhymetime.control:
+    description: Gives access to RhymeTime controls.
+  rhymetime.override:
+    description: Gives access to disable RhymeTime for a player.
+  rhymetime.participate:
+    description: Allows a user to participate in RhymeTime.
+  rhymetime.stats:
+    description: Allows a user to view RhymeTime statistics.
+  rhymetime.override.default:
+    description: Makes a user start with RhymeTime disabled.
+
+commands:
+  rtenable:
+    description: Enables RhymeTime
+    usage: /<command> [rhyme scheme]
+    aliases: [rton, rtstart]
+    permission: rhymetime.control
+    permission-message: You don't have permission to control RhymeTime.
+
+  rtdisable:
+    description: Disables RhymeTime
+    usage: /<command>
+    aliases: [rtoff, rtstop]
+    permission: rhymetime.control
+    permission-message: You don't have permission to control RhymeTime.
+
+  rttoggle:
+    description: Toggles RhymeTime
+    usage: /<command>
+    aliases: [rt]
+    permission: rhymetime.control
+    permission-message: You don't have permission to control RhymeTime.
+
+  rtscheme:
+    description: Changes RhymeTime's rhyme scheme
+    usage: /<command> [rhyme scheme]
+    permission: rhymetime.control
+    permission-message: You don't have permission to control RhymeTime.
+
+  rtstats:
+    description: Displays a player's rhyming stats
+    usage: /<command> [player]
+    permission: rhymetime.stats
+    permission-message: You don't have permission to view RhymeTime statistics.
+
+  rtoverride:
+    description: Overrides Rhyme Time
+    usage: /<command> [player]
+    permission: rhymetime.override
+    permission-message: You don't have permission to override RhymeTime.
+
+  rtscores:
+    description: Displays the RhymeTime Scoreboard
+    usage: /<command>
+    aliases: [rtleader, rtleaders]
+    permission: rhymetime.stats
+    permission-message: You don't have permission to view RhymeTime statistics.
