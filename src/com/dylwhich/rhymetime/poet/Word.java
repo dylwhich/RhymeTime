@@ -10,7 +10,7 @@ public class Word {
 			POS_Interjection = 0x0400, POS_Pronoun = 0x0800, POS_DefiniteArticle = 0x1000,
 			POS_IndefiniteArticle = 0x2000, POS_Nominative = 0x4000, POS_Nouns = POS_Noun | POS_Plural | POS_NounPhrase
 					| POS_Pronoun, POS_Verbs = POS_VerbParticiple | POS_VerbTransitive | POS_VerbIntransitive,
-			POS_Unknown = 0xffff;
+			POS_Unknown = -1;
 
 	public String text;
 	public char partOfSpeech;
@@ -52,13 +52,13 @@ public class Word {
 
 	public void printPron() {
 		int i = 0;
-		while (pron[i] != 0xffff) {
+		while (pron[i] != -1) {
 			System.out.printf("-%s", pronToText(pron[i]));
 			i++;
 		}
 	}
 
-	public String pronToText(int pr) {
+	public String pronToText(short pr) {
 		String result, which = "unknown";
 		char syllable = (char) (pr >> 14);
 		pr &= 0x3fff;
@@ -89,7 +89,7 @@ public class Word {
 			int stress = 0;
 			int pos = 0;
 			for (;;) {
-				if (pron[pos] == 0xffff || stresses[stress] == 0) {
+				if (pron[pos] == -1 || stresses[stress] == 0) {
 					return true;
 				}
 
@@ -105,5 +105,13 @@ public class Word {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public boolean equals(Object w) {
+		if (!(w instanceof Word)) {
+			return false;
+		}
+		return ((Word) w).text.equals(text);
 	}
 }

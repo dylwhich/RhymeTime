@@ -20,8 +20,12 @@ public class PoetTest {
 		}
 
 		List<Word> words = db.findRhymes(toRhyme, null, null);
-		for (Word w : words) {
-			w.print();
+		if (words != null) {
+			for (Word w : words) {
+				w.print();
+			}
+		} else {
+			System.out.printf("%s doesn't rhyme with anything! :(\n", toRhyme);
 		}
 	}
 

@@ -64,7 +64,7 @@ public class WordDatabase {
 		ch_in_bach,
 		eu_in_bleu,
 		u_in_duboise,
-		wa_in_noire
+		wa_in_noire;
 	};
 
 	private static class StateMachine {
@@ -168,21 +168,19 @@ public class WordDatabase {
 			state = s;
 			ch = c;
 			action = a;
-			phoneType = null;
 			nextState = n;
 		}
 
 		public StateMachine(State s, char c, PhoneType t, State n) {
 			state = s;
 			ch = c;
-			phoneType = t;
+			action = t.ordinal();
 			nextState = n;
 		}
 
 		public State state;
 		public char ch;
 		public int action;
-		public PhoneType phoneType;
 		public State nextState;
 	}
 
@@ -199,10 +197,31 @@ public class WordDatabase {
 		int max = 0;
 		Scanner s = new Scanner(f);
 
-		while (s.hasNext()) {
-			String name = s.next();
-			String pos = s.next();
-			String pron = s.next();
+		while (s.hasNextLine()) {
+			String line = s.nextLine();
+
+			if (line == null) {
+				continue;
+			}
+
+			StringTokenizer tok = new StringTokenizer(line, " \n\r");
+			String name = tok.nextToken();
+
+			if (name == null) {
+				continue;
+			}
+
+			String pos = tok.nextToken();
+
+			if (pos == null) {
+				continue;
+			}
+
+			String pron = tok.nextToken();
+
+			if (pron == null) {
+				continue;
+			}
 
 			char posType = (char) MobyToPartOfSpeech(pos.charAt(0));
 			if (posType == Word.POS_Unknown) {
@@ -223,13 +242,15 @@ public class WordDatabase {
 				continue;
 			}
 
-			pronBuffer[numPron++] = (short) 0xffff;
+			pronBuffer[numPron++] = (short) -1;
 
 			Word word = new Word();
 			word.text = name;
 			word.partOfSpeech = posType;
-			word.pron = pronBuffer;
+			word.pron = pronBuffer.clone();
 			word.numSyllables = numSyllables;
+
+			// word.print();
 
 			wordMap.put(word.text, word);
 			wordArray.add(word);
@@ -283,7 +304,7 @@ public class WordDatabase {
 		int pos = 0;
 		int numPhones = 0;
 		short numSyllables = 0;
-		int syllableType = 1; // normal stress
+		short syllableType = 1; // normal stress
 
 		while (state != StateMachine.State.end) {
 			if (pos >= mobyText.length()) {
@@ -299,9 +320,12 @@ public class WordDatabase {
 			for (int i = 0; i < StateMachine.STATE_MACHINE.length; i++) {
 				if (StateMachine.STATE_MACHINE[i].state == state
 						&& (StateMachine.STATE_MACHINE[i].ch == ch || StateMachine.STATE_MACHINE[i].ch == '?')) {
+
 					state = StateMachine.STATE_MACHINE[i].nextState;
+
 					if (StateMachine.STATE_MACHINE[i].ch == '?') {
 						pron[numPhones++] = (short) StateMachine.STATE_MACHINE[i].action;
+
 						if (PhoneSet.PHONE_SET[StateMachine.STATE_MACHINE[i].action].isSyllable) {
 							pron[numPhones - 1] |= syllableType << 14;
 							syllableType = 1;
@@ -310,6 +334,7 @@ public class WordDatabase {
 					} else {
 						if (StateMachine.STATE_MACHINE[i].action >= 0) {
 							pron[numPhones++] = (short) StateMachine.STATE_MACHINE[i].action;
+
 							if (PhoneSet.PHONE_SET[StateMachine.STATE_MACHINE[i].action].isSyllable) {
 								pron[numPhones - 1] |= syllableType << 14;
 								syllableType = 1;
@@ -350,11 +375,11 @@ public class WordDatabase {
 		int pos2 = 0;
 		int count = 0;
 
-		while (word1.pron[pos1] != 0xffff) {
+		while (word1.pron[pos1] != -1) {
 			pos1++;
 		}
 
-		while (word2.pron[pos2] != 0xffff) {
+		while (word2.pron[pos2] != -1) {
 			pos2++;
 		}
 
@@ -384,7 +409,7 @@ public class WordDatabase {
 	static int MinSuffixContainingSyllable(Word word) {
 		int pos = 0;
 		int lastSyllable = 0;
-		while (word.pron[pos] != 0xffff) {
+		while (word.pron[pos] != -1) {
 			if ((word.pron[pos] >> 14) != 0) {
 				lastSyllable = pos;
 			}
@@ -396,7 +421,7 @@ public class WordDatabase {
 
 	static int CountPhenomes(Word word) {
 		int pos = 0;
-		while (word.pron[pos] != 0xffff) {
+		while (word.pron[pos] != -1) {
 			pos++;
 		}
 
@@ -407,7 +432,7 @@ public class WordDatabase {
 		List<Word> results = new ArrayList<Word>();
 
 		// look up word.
-		Word word = wordMap.get(whichword);
+		Word word = wordMap.get(RemovePunctuation(whichword));
 
 		if (word == null) {
 			return null;
@@ -450,6 +475,15 @@ public class WordDatabase {
 		}
 
 		return results;
+	}
+
+	public boolean rhymes(String word1, String word2) {
+		List<Word> results = findRhymes(word1, null, null);
+		List<Word> results2 = findRhymes(word2, null, null);
+		Word w1 = lookup(word1);
+		Word w2 = lookup(word2);
+		return w1 != null && w2 != null
+				&& ((results != null && results.contains(w2)) || (results2 != null && results2.contains(w1)));
 	}
 
 	public Word lookup(String whichword) {
