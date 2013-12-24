@@ -1,7 +1,5 @@
 package com.dylwhich.rhymetime;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +19,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.dylwhich.rhymetime.poet.WordDatabase;
+import com.dylwhich.javaspeak.javaSpeak;
 
 public class RhymeTime extends JavaPlugin implements Listener {
 	private static final Permission PERM_CONTROL = new Permission("rhymetime.control");
@@ -30,7 +28,6 @@ public class RhymeTime extends JavaPlugin implements Listener {
 	private static final Permission PERM_PARTICIPATE = new Permission("rhymetime.participate");
 	private static final Permission PERM_STATS = new Permission("rhymetime.stats");
 
-	private WordDatabase db;
 	private Map<Player, String[]> playerWords;
 	private Set<Player> overrides;
 	private Map<Player, RhymeStatistics> statistics;
@@ -38,17 +35,15 @@ public class RhymeTime extends JavaPlugin implements Listener {
 	private String rhymeScheme;
 	private boolean enabled;
 
+	static {
+		System.loadLibrary("javaSpeak");
+	}
+
 	@Override
 	public void onEnable() {
-		db = new WordDatabase();
-		try {
-			db.load(new File(getDataFolder(), "dict.txt").getPath());
-			getLogger().log(Level.INFO, "Finished building WordDatabase");
-		} catch (FileNotFoundException e) {
-			getLogger().log(Level.SEVERE, "Could not find dictionary!", e);
-			getPluginLoader().disablePlugin(this);
-			return;
-		}
+		javaSpeak.initialize();
+
+		System.loadLibrary("javaSpeak");
 
 		playerWords = new HashMap<Player, String[]>();
 		overrides = new HashSet<Player>();
@@ -72,7 +67,6 @@ public class RhymeTime extends JavaPlugin implements Listener {
 	@Override
 	public void onDisable() {
 		enabled = false;
-		db = null;
 		playerWords = null;
 		overrides = null;
 		statistics = null;
@@ -181,31 +175,43 @@ public class RhymeTime extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onChatMessage(AsyncPlayerChatEvent e) {
+		getLogger().log(Level.INFO, e.getPlayer().getName() + " said " + e.getMessage());
 		Player p = e.getPlayer();
 		String msg = e.getMessage();
 
 		if (p.hasPermission(PERM_PARTICIPATE) && !overrides.contains(p)) {
 
 			String[] words = playerWords.get(p);
+
 			for (int i = 0; i < words.length; i++) {
 				if (words[i] == null) {
+					getLogger().log(Level.INFO, "Putting new word into slot " + i);
 					words[i] = msg;
 
-					if (i == words.length - 1) {
-						if (RhymeScheme.validate(db, rhymeScheme, words)) {
+					if (RhymeScheme.validate(rhymeScheme, words)) {
+						if (i == words.length - 1) {
 							statistics.get(p).addSuccess();
-						} else {
-							statistics.get(p).addFail();
-							// punish!
-							p.getWorld().strikeLightning(p.getLocation());
-
-							p.sendMessage("That does not rhyme!");
 						}
+					} else {
+						statistics.get(p).addFail();
+						// punish!
+						p.getWorld().strikeLightning(p.getLocation());
 
-						words = new String[words.length];
+						p.sendMessage("That does not rhyme!");
+						playerWords.put(p, new String[words.length]);
 					}
+
+					if (i == words.length - 1) {
+						playerWords.put(p, new String[words.length]);
+					}
+
+					break;
+				} else {
+					getLogger().log(Level.INFO, "" + i + ": " + words[i]);
 				}
 			}
+		} else {
+			getLogger().log(Level.INFO, "User did not have participate permission or was overriden.");
 		}
 	}
 
@@ -221,6 +227,10 @@ public class RhymeTime extends JavaPlugin implements Listener {
 
 		if (!statistics.containsKey(e.getPlayer())) {
 			statistics.put(e.getPlayer(), new RhymeStatistics(e.getPlayer()));
+		}
+
+		if (enabled && !overrides.contains(e.getPlayer())) {
+			e.getPlayer().sendMessage("It's RhymeTime! The scheme is " + rhymeScheme);
 		}
 	}
 

@@ -41,8 +41,8 @@ public class RhymeStatistics implements Comparable<RhymeStatistics> {
 
 	@Override
 	public String toString() {
-		return String.format("%s: %d/%d (%.2f) %d", owner, successes, successes + fails, (fails + successes) == 0 ? 0
-				: 1.0 * successes / (fails + successes), maxStreak);
+		return String.format("%s: %d/%d (%.2f) %d", owner.getName(), successes, successes + fails,
+				(fails + successes) == 0 ? 0 : 1.0 * successes / (fails + successes), maxStreak);
 	}
 
 	@Override

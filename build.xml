@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="RhymeTime" default="jar" basedir=".">
+  <description>Bukkit plugin that enforces rhyming</description>
+  <property name="source.dir" location="src"/>
+  <property name="build.dir" location="bin"/>
+  <property name="bukkit.jar" location="../lib/bukkit.jar"/>
+
+  <target name="init" description="setup directories">
+    <mkdir dir="${build.dir}"/>
+  </target>
+
+  <target name="compile" depends="init" description="compile java">
+    <javac includeantruntime="false" srcdir="${source.dir}" destdir="${build.dir}">
+      <classpath>
+	<pathelement location="${bukkit.jar}"/>
+	<pathelement location="lib/javaSpeak.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile" description="create jar">
+    <jar destfile="RhymeTime.jar" basedir="${build.dir}">
+      <zipgroupfileset dir="lib" includes="*.jar"/>
+      <fileset dir="." includes="plugin.yml"/>
+    </jar>
+  </target>
+
+  <target name="clean" description="clean files">
+    <delete>
+      <fileset dir="${build.dir}"/>
+      <fileset dir="." includes="RhymeTime.jar"/>
+    </delete>
+  </target>
+</project>
